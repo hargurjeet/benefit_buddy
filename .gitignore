@@ -1,0 +1,15 @@
+.env
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+adk_env/
+
+# Ignore large downloaded datasets but keep the folder structure
+data/*
+!data/.gitkeep
+
+# macOS metadata / AppleDouble files
+._*
+.DS_Store
