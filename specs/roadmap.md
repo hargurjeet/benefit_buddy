@@ -41,21 +41,22 @@ This document outlines the step-by-step master plan for implementing the **Benef
 
 ---
 
-## 🛡️ Phase 4: Parallel Orchestration & Guardrails (`004-guardrails`)
-*Goal: Concurrently fetch web/local matches and validate sources.*
+## 🛡️ Phase 4: Parallel Orchestration (`004-parallel-orchestration`)
+*Goal: Concurrently fetch web and local database matches in parallel branches.*
 
 ### Steps:
-- [ ] Configure the `ParallelAgent` (`parallel_search`) to run both search agents concurrently in separate state branches.
-- [ ] Implement merging and validation rules in `guardrail_response_agent/agent.py`.
-- [ ] Enforce allowlist regex pattern checks ensuring all outbound links originate strictly from `.gov.in` or `.nic.in` domains.
-- [ ] Output the formatted Markdown results containing verified scheme lists, eligibility descriptions, and cited links.
+- [ ] Configure the `ParallelAgent` (`parallel_search`) to run both search agents concurrently.
+- [ ] Ensure `web_search_agent` and `dataset_search_agent` store their respective outputs in `web_search_result` and `dataset_search_result` in `session.state`.
 
 ---
 
-## 🧪 Phase 5: Evaluation & Testing (`005-evaluation-testing`)
-*Goal: Validate that normalization, search retrieval, and guardrail logic are robust.*
+## 🔒 Phase 5: Guardrails & Security Layer (`005-guardrails-security`)
+*Goal: Reject hallucinations, verify official government sources, and test robustness.*
 
 ### Steps:
+- [ ] Implement merging and validation rules in `guardrail_response_agent/agent.py`.
+- [ ] Enforce allowlist regex pattern checks ensuring all outbound links originate strictly from `.gov.in` or `.nic.in` domains.
+- [ ] Implement hallucination checking to ensure scheme names and details match the source databases and web references.
 - [ ] Set up a suite of mock citizen profiles testing varying incomes, states, and formatting.
 - [ ] Run test execution cycles checking for:
   *   Accuracy of income parsing and normalization.
@@ -64,18 +65,21 @@ This document outlines the step-by-step master plan for implementing the **Benef
 
 ---
 
-## 🖥️ Phase 6: API and Interface (`006-deployment-ui`)
-*Goal: Expose the agent via a web dashboard and program accessible API endpoint.*
-
-### Steps:
-- [ ] Build a FastAPI server wrapping the pipeline to accept user queries and stream agent events.
-- [ ] Setup a React or Streamlit frontend interface displaying the conversation stream and a live profile card.
-
----
-
-## 📈 Phase 7: Observability & Maintenance (`007-observability-maintenance`)
-*Goal: Token optimization, latency improvements, and data updates.*
+## 📈 Phase 6: Observability & Maintenance (`006-observability-maintenance`)
+*Goal: Token optimization, latency tracking, and data updates.*
 
 ### Steps:
 - [ ] Configure ADK's native OpenTelemetry integrations to track step durations and token expenditures.
 - [ ] Schedule cron jobs to check Kaggle and government feeds, ensuring the vector database remains updated.
+
+---
+
+## 🖥️ Phase 7: API, Interface & Google Cloud Deployment (`007-api-ui-gcp`)
+*Goal: Expose the agent via web UI and API, and deploy on Google Cloud Platform.*
+
+### Steps:
+- [ ] Build a FastAPI server wrapping the pipeline to accept user queries and stream agent events.
+- [ ] Setup a React or Streamlit frontend interface displaying the conversation stream and a live profile card.
+- [ ] Containerize the application (Docker) and set up deployment scripts for Google Cloud (Cloud Run).
+- [ ] Configure GCP environment variables, service accounts, and API keys securely.
+
