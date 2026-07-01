@@ -51,17 +51,21 @@ This document outlines the step-by-step master plan for implementing the **Benef
 ---
 
 ## 🔒 Phase 5: Guardrails & Security Layer (`005-guardrails-security`)
-*Goal: Reject hallucinations, verify official government sources, and test robustness.*
+*Goal: Reject hallucinations, verify official government sources, block prompt injections, and test robustness.*
 
 ### Steps:
 - [ ] Implement merging and validation rules in `guardrail_response_agent/agent.py`.
 - [ ] Enforce allowlist regex pattern checks ensuring all outbound links originate strictly from `.gov.in` or `.nic.in` domains.
 - [ ] Implement hallucination checking to ensure scheme names and details match the source databases and web references.
+- [ ] Build a prompt injection detection utility (e.g., scanning inputs for system prompt overrides, instructions to ignore previous constraints, or jailbreak attempts).
+- [ ] Create security blocking rules to intercept injection attempts, log the violation, and notify the user with a standard warning message.
 - [ ] Set up a suite of mock citizen profiles testing varying incomes, states, and formatting.
 - [ ] Run test execution cycles checking for:
   *   Accuracy of income parsing and normalization.
   *   Recall efficiency of vector search matching.
   *   Strict blocking of non-allowlisted URLs (red teaming).
+  *   Efficacy of prompt injection blocks under adversarial tests.
+
 
 ---
 
