@@ -8,15 +8,15 @@ This document outlines the step-by-step master plan for implementing the **Benef
 *Goal: Conversational collection of user details without traditional web forms.*
 
 ### Steps:
-- [ ] Define the `UserProfile` Pydantic model inside `intake_agent/agent.py`.
-- [ ] Write system instruction guidelines in `intake_agent/agent.py` to extract:
+- [x] Define the `UserProfile` Pydantic model inside `intake_agent/agent.py`.
+- [x] Write system instruction guidelines in `intake_agent/agent.py` to extract:
   *   `state`
   *   `occupation`
   *   `annual_income` (needs normalization)
   *   `family_details`
-- [ ] Implement an `after_model_callback` to process the raw model text, normalize values like `"3 lakhs"` to a numeric float `300000.0`, and update the state.
-- [ ] Implement a validation check that sets `session.state.profile_complete = True` when all fields are successfully extracted.
-- [ ] Configure `benefit_buddy_pipeline` in the root `agent.py` to check for completion and hand over execution.
+- [x] Implement an `after_model_callback` to process the raw model text, normalize values like `"3 lakhs"` to a numeric float `300000.0`, and update the state.
+- [x] Implement a validation check that sets `session.state.profile_complete = True` when all fields are successfully extracted.
+- [x] Configure `benefit_buddy_pipeline` in the root `agent.py` to check for completion and hand over execution.
 
 ---
 

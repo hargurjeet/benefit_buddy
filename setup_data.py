@@ -17,7 +17,8 @@ def setup():
         try:
             download_path = kagglehub.dataset_download(
                 "nitishabharathi/indian-government-schemes",
-                output_dir=data_dir
+                output_dir=data_dir,
+                force_download=True
             )
             print(f"Dataset successfully downloaded to: {download_path}")
         except Exception as e:
