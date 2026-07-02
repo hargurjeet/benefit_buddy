@@ -2,7 +2,7 @@ from google.adk.agents import LlmAgent
 from tools.dataset_search_tool import dataset_search
 
 async def skip_if_profile_incomplete(callback_context):
-    if not callback_context.state.get("profile_complete"):
+    if callback_context.state.get("security_blocked") or not callback_context.state.get("profile_complete"):
         callback_context._invocation_context.end_invocation = True
         return None
     return None

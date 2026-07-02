@@ -20,7 +20,28 @@ def check_profile_completeness(profile: UserProfile) -> bool:
         profile.family_details is not None
     )
 
+from tools.security_tool import detect_prompt_injection
+
+def get_latest_user_message(callback_context) -> str:
+    for event in reversed(callback_context.session.events):
+        if event.author == "user":
+            if event.content and event.content.parts:
+                text = "".join(part.text for part in event.content.parts if part.text)
+                if text:
+                    return text
+    return ""
+
 async def before_intake(callback_context):
+    # Retrieve the user's latest message
+    user_msg = get_latest_user_message(callback_context)
+    if detect_prompt_injection(user_msg):
+        callback_context.state['security_blocked'] = True
+        callback_context._invocation_context.end_invocation = True
+        return types.Content(
+            role="model",
+            parts=[types.Part.from_text(text="[Security Warning: Adversarial inputs or prompt overrides detected. Execution halted.]")]
+        )
+
     # If the profile is already complete, mark the invocation as ended to transition immediately.
     if callback_context.state.get('profile_complete'):
         callback_context._invocation_context.end_invocation = True

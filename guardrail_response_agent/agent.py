@@ -27,8 +27,48 @@ def sanitize_text_links(text: str) -> str:
         
     return re.sub(url_pattern, replace_url, text)
 
+def remove_hallucinations(text: str, search_combined: str) -> str:
+    if not search_combined or not search_combined.strip():
+        return text
+        
+    search_lower = search_combined.lower()
+    sections = re.split(r'(?=^####\s+)', text, flags=re.MULTILINE)
+    if len(sections) <= 1:
+        return text
+        
+    sanitized_sections = [sections[0]]
+    for section in sections[1:]:
+        lines = section.split("\n")
+        heading_line = lines[0]
+        
+        # Clean heading (remove #### and numbers/dots, e.g. "1. PM Kisan" -> "PM Kisan")
+        clean_heading = re.sub(r'^####\s+(?:\d+\.\s+)?', '', heading_line).strip()
+        clean_heading_lower = clean_heading.lower()
+        
+        # Verify if heading or key words are present in either search result
+        clean_heading_words = re.findall(r'\b\w{4,}\b', clean_heading_lower)
+        
+        is_valid = False
+        if clean_heading_lower in search_lower:
+            is_valid = True
+        elif clean_heading_words:
+            # Check if any significant word of length >= 4 is in search index
+            for word in clean_heading_words:
+                if word in search_lower:
+                    is_valid = True
+                    break
+        else:
+            is_valid = (clean_heading_lower in search_lower)
+            
+        if is_valid:
+            sanitized_sections.append(section)
+        else:
+            # Replace hallucination with warning
+            sanitized_sections.append(f"#### [Scheme Recommendation Block Removed - Source validation failed for '{clean_heading}']\n\n")
+            
+    return "".join(sanitized_sections)
+
 async def after_guardrail(callback_context, llm_response):
-    # Retrieve the generated response text
     if not llm_response.content or not llm_response.content.parts:
         return None
         
@@ -39,12 +79,19 @@ async def after_guardrail(callback_context, llm_response):
     # Sanitize any non-government URLs dynamically
     sanitized_text = sanitize_text_links(text)
     
-    # Save the sanitized text back in place
-    llm_response.content.parts = [types.Part.from_text(text=sanitized_text)]
+    # Retrieve search results to check for hallucinations
+    db_result = callback_context.state.get("dataset_search_result", "")
+    web_result = callback_context.state.get("web_search_result", "")
+    search_combined = f"{db_result}\n{web_result}"
+    
+    # Clean out any hallucinated scheme sections
+    final_text = remove_hallucinations(sanitized_text, search_combined)
+    
+    llm_response.content.parts = [types.Part.from_text(text=final_text)]
     return llm_response
 
 async def skip_if_profile_incomplete(callback_context):
-    if not callback_context.state.get("profile_complete"):
+    if callback_context.state.get("security_blocked") or not callback_context.state.get("profile_complete"):
         callback_context._invocation_context.end_invocation = True
         return None
     return None
