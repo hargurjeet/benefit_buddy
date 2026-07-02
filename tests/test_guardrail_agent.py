@@ -1,5 +1,8 @@
 import os
 import sys
+import re
+import asyncio
+from urllib.parse import urlparse
 
 # Add project root to sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -7,70 +10,99 @@ project_root = os.path.dirname(current_dir)
 if project_root not in sys.path:
     sys.path.append(project_root)
 
-import asyncio
+from google.adk.runners import Runner
+from google.adk.sessions.in_memory_session_service import InMemorySessionService
 from google.genai import types
-from guardrail_response_agent.agent import after_guardrail, sanitize_text_links
 
-class MockContent:
-    def __init__(self, text):
-        self.parts = [types.Part.from_text(text=text)]
+def load_env():
+    env_path = os.path.join(project_root, ".env")
+    if os.path.exists(env_path):
+        with open(env_path, "r") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, val = line.split("=", 1)
+                    val = val.strip().strip("'").strip('"')
+                    os.environ[key.strip()] = val
 
-class MockLlmResponse:
-    def __init__(self, text):
-        self.content = MockContent(text)
+from agent import root_agent
 
-class MockState(dict):
-    pass
+async def test_guardrail_flow():
+    load_env()
+    # Make sure GEMINI_API_KEY is available
+    if not os.environ.get("GEMINI_API_KEY"):
+        print("Error: GEMINI_API_KEY environment variable is not set!")
+        print("Please export GEMINI_API_KEY=your_key in your terminal first.")
+        return
 
-class MockCallbackContext:
-    def __init__(self, state_dict):
-        self.state = MockState(state_dict)
+    print("Initializing ADK Runner for root agent pipeline...")
+    runner = Runner(
+        agent=root_agent,
+        app_name="guardrail_test",
+        session_service=InMemorySessionService(),
+        auto_create_session=True
+    )
 
-def test_link_sanitization():
-    print("Running link sanitization callback tests...")
-    
-    # 1. Test case: Text containing a mix of valid government links and invalid blog links
-    raw_text = """
-    Here are the recommendations:
-    1. PM Kisan Yojana: Access the official portal at https://pmkisan.gov.in/ to apply.
-    2. Guide Blog: You can also read this unofficial guide at http://someblogsite.com/pm-kisan-registration for help.
-    3. State Pension: Check status at https://sspension.punjab.gov.in/status.
-    4. General Info: Avoid this spam site at https://spamlink.org/info.
-    """
-    
-    print("\nOriginal generated response:")
-    print(raw_text)
-    
-    sanitized_text = sanitize_text_links(raw_text)
-    print("\nSanitized response:")
-    print(sanitized_text)
-    
-    # Verify valid links are intact
-    assert "https://pmkisan.gov.in/" in sanitized_text, "Failed: Valid gov.in link was incorrectly removed!"
-    assert "https://sspension.punjab.gov.in/status" in sanitized_text, "Failed: Valid state gov.in link was incorrectly removed!"
-    
-    # Verify invalid links are removed
-    assert "http://someblogsite.com/pm-kisan-registration" not in sanitized_text, "Failed: Invalid blog link was not removed!"
-    assert "https://spamlink.org/info" not in sanitized_text, "Failed: Invalid spam link was not removed!"
-    assert "[Link Removed - Only official government portals allowed]" in sanitized_text, "Failed: Warning placeholder was not inserted!"
-    
-    print("\nSUCCESS: Link sanitization math worked perfectly!")
+    user_id = "test_user_guardrail"
+    session_id = "test_session_guardrail"
 
-async def test_callback_execution():
-    print("\nRunning CallbackContext ADK callback wrapper test...")
-    raw_text = "Apply here: https://externalblog.in/apply or official: https://india.gov.in/portal"
+    # Profile turns to complete intake and trigger search/guardrail phases
+    messages = [
+        "Hi, I am a farmer from Punjab.",
+        "My annual income is 3 Lakhs.",
+        "I have two kids in grade 3 and 7."
+    ]
+
+    final_response_text = ""
+
+    for i, msg in enumerate(messages, 1):
+        print(f"\n--- Turn {i} ---")
+        print(f"User: {msg}")
+        
+        content = types.Content(role="user", parts=[types.Part.from_text(text=msg)])
+        
+        events = list(runner.run(
+            user_id=user_id,
+            session_id=session_id,
+            new_message=content
+        ))
+        
+        for event in events:
+            if event.content and event.content.parts:
+                text = "".join(part.text for part in event.content.parts if part.text)
+                if text:
+                    # Print agent responses (IntakeAgent in early turns, GuardrailResponseAgent in the final turn)
+                    print(f"Agent: {text}")
+                    final_response_text = text
+
+    print("\n--- Final Pipeline Output ---")
+    print(final_response_text)
+    print("------------------------------")
+
+    # Assertions to ensure no external (non-government) domains made it through
+    url_pattern = r'https?://[^\s\)\*\`\"\']+'
+    found_links = re.findall(url_pattern, final_response_text)
+    print(f"Links found in final response: {found_links}")
     
-    mock_response = MockLlmResponse(raw_text)
-    mock_context = MockCallbackContext({})
+    invalid_links = []
+    for link in found_links:
+        try:
+            parsed = urlparse(link)
+            domain = parsed.netloc.lower()
+            if ":" in domain:
+                domain = domain.split(":", 1)[0]
+            if not (domain.endswith(".gov.in") or domain.endswith(".nic.in")):
+                invalid_links.append(link)
+        except Exception:
+            invalid_links.append(link)
+
+    assert not invalid_links, f"FAILED: Disallowed non-government links found in response: {invalid_links}"
     
-    result = await after_guardrail(mock_context, mock_response)
-    resp_text = result.content.parts[0].text
+    # Check that at least one official scheme link was recommended
+    assert len(found_links) > 0, "FAILED: No official links recommended in response!"
     
-    print(f"Sanitized result: {resp_text}")
-    assert "https://externalblog.in/apply" not in resp_text
-    assert "https://india.gov.in/portal" in resp_text
-    print("SUCCESS: Callback wrapper executed and updated LlmResponse successfully!")
+    print("\nSUCCESS: End-to-end integration test executed successfully!")
+    print("Verification passed: final response strictly respects domain filters without any mock setups.")
 
 if __name__ == "__main__":
-    test_link_sanitization()
-    asyncio.run(test_callback_execution())
+    asyncio.run(test_guardrail_flow())

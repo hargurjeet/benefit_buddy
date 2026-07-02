@@ -4,13 +4,20 @@ This file maintains the current progress and context of the BenefitBuddy project
 
 ---
 
+## ⚠️ Testing & Validation Constraints (IMPORTANT)
+
+*   **NO MOCK SETUPS**: Do not write tests using mock request classes, mock states, or mock callback parameters.
+*   **Pipeline Verification**: Always test using the actual, original end-to-end agent pipeline flow (instantiating the ADK `Runner` wrapping `root_agent` and invoking the sub-agents and tools for real inputs), then validate the final answers.
+
+---
+
 ## Current Progress (July 2, 2026)
 
 We are building **BenefitBuddy**, an AI welfare navigator, using the Google ADK 2.0 framework.
 The following phases are completed and verified:
 
 1.  **Phase 1: Intake Agent**
-    *   Extracts and structures user demographics (state, income, occupation, family).
+    *   Extracts and structures user demographics (state, occupation, normalized annual income, and family details).
     *   Normalizes income values (converts monthly to annual, handles terms like "lakh").
     *   Verified via: `python3 tests/test_intake_agent.py`.
 

@@ -43,6 +43,12 @@ async def after_guardrail(callback_context, llm_response):
     llm_response.content.parts = [types.Part.from_text(text=sanitized_text)]
     return llm_response
 
+async def skip_if_profile_incomplete(callback_context):
+    if not callback_context.state.get("profile_complete"):
+        callback_context._invocation_context.end_invocation = True
+        return None
+    return None
+
 guardrail_response_agent = LlmAgent(
     name="guardrail_response_agent",
     model="gemini-2.5-flash",
@@ -63,5 +69,6 @@ Your final output MUST follow these guidelines:
 - Under our strict project constitution, YOU MUST ONLY output links originating from .gov.in or .nic.in domains. Never include external non-government blog links or articles.
 
 Deliver your response in a highly structured, professional, and clear Markdown format.""",
+    before_agent_callback=skip_if_profile_incomplete,
     after_model_callback=after_guardrail
 )

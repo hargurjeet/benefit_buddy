@@ -1,9 +1,9 @@
 from google.adk.agents import SequentialAgent, ParallelAgent
 
-from .intake_agent import intake_agent
-from .web_search_agent import web_search_agent
-from .dataset_search_agent import dataset_search_agent
-from .guardrail_response_agent import guardrail_response_agent
+from intake_agent import intake_agent
+from web_search_agent import web_search_agent
+from dataset_search_agent import dataset_search_agent
+from guardrail_response_agent import guardrail_response_agent
 
 # 2. Parallel Search: Runs the web search and dataset search concurrently
 parallel_search = ParallelAgent(
