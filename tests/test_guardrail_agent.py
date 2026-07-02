@@ -80,7 +80,7 @@ async def test_guardrail_flow():
     print("------------------------------")
 
     # Assertions to ensure no external (non-government) domains made it through
-    url_pattern = r'https?://[^\s\)\*\`\"\']+'
+    url_pattern = r"https?://[^\s\)\(\[\]\*\`\"']+"
     found_links = re.findall(url_pattern, final_response_text)
     print(f"Links found in final response: {found_links}")
     
