@@ -6,7 +6,7 @@ from google.genai import types
 def sanitize_text_links(text: str) -> str:
     # Match standard URLs (http/https)
     # The regex matches characters that are valid in URL paths but stops at common markdown delimiters
-    url_pattern = r'https?://[^\s\)\*\`\"\']+'
+    url_pattern = r"https?://[^\s\)\(\[\]\*\`\"']+"
     
     def replace_url(match):
         url = match.group(0)
