@@ -73,7 +73,8 @@ async def after_intake(callback_context, llm_response):
         # Skip extraction if API key is not set (e.g. in basic unit tests)
         return None
         
-    client = genai.Client(api_key=api_key)
+    # Explicitly disable Vertex AI to enforce Developer API in GCP environments
+    client = genai.Client(api_key=api_key, vertexai=False)
     try:
         # Load existing profile if any
         current_profile_dict = callback_context.state.get('user_profile', {})
