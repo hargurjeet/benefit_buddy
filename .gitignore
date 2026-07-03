@@ -13,3 +13,8 @@ data/*
 # macOS metadata / AppleDouble files
 ._*
 .DS_Store
+
+# Local ADK runtime database and packaging metadata
+.adk/
+*.egg-info/
+
