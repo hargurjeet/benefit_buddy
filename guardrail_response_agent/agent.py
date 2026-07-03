@@ -82,7 +82,8 @@ async def after_guardrail(callback_context, llm_response):
     # Retrieve search results to check for hallucinations
     db_result = callback_context.state.get("dataset_search_result", "")
     web_result = callback_context.state.get("web_search_result", "")
-    search_combined = f"{db_result}\n{web_result}"
+    tavily_result = callback_context.state.get("tavily_search_result", "")
+    search_combined = f"{db_result}\n{web_result}\n{tavily_result}"
     
     # Clean out any hallucinated scheme sections
     final_text = remove_hallucinations(sanitized_text, search_combined)
@@ -106,10 +107,11 @@ First, read the session state keys from the conversation context:
 1. `user_profile`: The user's collected demographic profile (state, occupation, normalized annual income, and family details).
 2. `dataset_search_result`: Discovered schemes from the local vector database.
 3. `web_search_result`: Fresh scheme updates and guidelines from online portals.
+4. `tavily_search_result`: AI-optimized web search results from the Tavily MCP server.
 
 Your final output MUST follow these guidelines:
 - Summarize the user's demographic profile we are matching against (State, Income, Occupation, Family Size).
-- Evaluate the user's eligibility for each of the schemes found in `dataset_search_result` and `web_search_result` (match state, income limits, occupation, etc.).
+- Evaluate the user's eligibility for each of the schemes found in `dataset_search_result`, `web_search_result`, and `tavily_search_result` (match state, income limits, occupation, etc.).
 - ONLY recommend schemes for which the user meets the eligibility criteria. If they do not qualify for any, explain why.
 - Provide details, benefits, and an actionable Next Steps checklist for each qualified scheme.
 - Every recommended scheme must include its official source link.

@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+
 from duckduckgo_search import DDGS
 
 def web_search(query: str) -> str:

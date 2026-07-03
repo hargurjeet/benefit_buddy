@@ -3,6 +3,10 @@ import sys
 import re
 import asyncio
 from urllib.parse import urlparse
+import warnings
+warnings.filterwarnings("ignore")
+
+from dotenv import load_dotenv
 
 # Add project root to sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -13,22 +17,11 @@ if project_root not in sys.path:
 from google.adk.runners import Runner
 from google.adk.sessions.in_memory_session_service import InMemorySessionService
 from google.genai import types
-
-def load_env():
-    env_path = os.path.join(project_root, ".env")
-    if os.path.exists(env_path):
-        with open(env_path, "r") as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith("#") and "=" in line:
-                    key, val = line.split("=", 1)
-                    val = val.strip().strip("'").strip('"')
-                    os.environ[key.strip()] = val
-
 from agent import root_agent
 
 async def test_guardrail_flow():
-    load_env()
+    env_path = os.path.join(project_root, ".env")
+    load_dotenv(dotenv_path=env_path)
     # Make sure GEMINI_API_KEY is available
     if not os.environ.get("GEMINI_API_KEY"):
         print("Error: GEMINI_API_KEY environment variable is not set!")

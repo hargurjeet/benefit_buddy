@@ -6,3 +6,5 @@ opentelemetry-exporter-gcp-logging
 opentelemetry-exporter-gcp-trace
 pydantic
 numpy
+python-dotenv
+mcp>=1.2.0

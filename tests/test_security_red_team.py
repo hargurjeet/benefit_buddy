@@ -2,6 +2,8 @@ import os
 import sys
 import asyncio
 
+from dotenv import load_dotenv
+
 # Add project root to sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(current_dir)
@@ -11,17 +13,6 @@ if project_root not in sys.path:
 from google.adk.runners import Runner
 from google.adk.sessions.in_memory_session_service import InMemorySessionService
 from google.genai import types
-
-def load_env():
-    env_path = os.path.join(project_root, ".env")
-    if os.path.exists(env_path):
-        with open(env_path, "r") as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith("#") and "=" in line:
-                    key, val = line.split("=", 1)
-                    val = val.strip().strip("'").strip('"')
-                    os.environ[key.strip()] = val
 
 from agent import root_agent
 
@@ -108,7 +99,8 @@ async def test_adversarial_flow():
     print("\nSUCCESS: Adversarial prompt injection blocked successfully!")
 
 if __name__ == "__main__":
-    load_env()
+    env_path = os.path.join(project_root, ".env")
+    load_dotenv(dotenv_path=env_path)
     if not os.environ.get("GEMINI_API_KEY"):
         print("Error: GEMINI_API_KEY is not set!")
         sys.exit(1)
