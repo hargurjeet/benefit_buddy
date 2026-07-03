@@ -33,9 +33,12 @@ The ADK deployment CLI bundles your project directory and deploys it. Ensure the
 ### 1. Requirements (`requirements.txt`)
 All required dependencies are listed in `requirements.txt`:
 ```text
-google-genai==0.1.1
-google-adk==2.0.0
-ddgs==9.14.4
+google-genai==2.10.0
+google-adk==2.3.0
+duckduckgo_search==8.1.1
+opentelemetry-exporter-otlp
+opentelemetry-exporter-gcp-logging
+opentelemetry-exporter-gcp-trace
 pydantic
 numpy
 ```
