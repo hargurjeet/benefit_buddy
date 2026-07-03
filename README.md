@@ -221,6 +221,25 @@ adk deploy cloud_run \
 
 ---
 
+## 🛠️ Agent Skills & Workspace Customizations
+
+BenefitBuddy leverages both development-time agent customizations (workspace skills) and runtime agent capabilities (Tavily MCP skills):
+
+### Development-Time Customization Skills (`.agents/skills/`)
+These project-scoped skills guide the AI coding assistant during design, development, and version control:
+*   **`license-header-adder`**: Automatically prepends standard copyright and Apache 2.0 license headers to all new source files.
+*   **`clean-mac-files`**: Spawns pre-push Git hooks to clean macOS metadata and AppleDouble files (`._*`) before pushing changes to GitHub.
+*   **`git-commit-formatter`**: Enforces Conventional Commits formatting rules (e.g., `feat:`, `fix:`, `docs:`) for all repository commits.
+*   **`database-schema-validator`**: Validates SQL schema compliance against strict naming, structural, and safety standards (no drop statements, snake_case tables).
+*   **`json-to-pydantic`**: Helps convert JSON payloads and API responses into strongly-typed Pydantic classes for type-safe data integration.
+
+### Runtime Agent Skills (Tavily MCP)
+These capabilities are exposed as tools to the running agents in production:
+*   **`tavily-search`**: Executes neural, context-sensitive web searches. Limited at the tool boundary to retrieve results exclusively from `.gov.in` and `.nic.in` domains.
+*   **`tavily-extract`**: Dynamically downloads and extracts clean, structured markdown from government web pages. This enables the agent to parse actual guidelines and eligibility rules from official portals to avoid snippets-based hallucination.
+
+---
+
 ## 🏆 Key Achievements (Kaggle Capstone Alignment)
 
 - **Problem Definition**: Directly addresses the massive structural barrier for low-income Indian citizens accessing complex welfare programs.
