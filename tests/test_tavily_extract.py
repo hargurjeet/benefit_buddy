@@ -24,7 +24,7 @@ project_root = os.path.dirname(current_dir)
 if project_root not in sys.path:
     sys.path.append(project_root)
 
-from tools.tavily_search_tool import tavily_search
+from tools.tavily_search_tool import tavily_extract
 
 def run_test():
     # Load .env file
@@ -39,24 +39,39 @@ def run_test():
         
     print(f"Using Tavily API Key: {api_key[:5]}...{api_key[-5:]}")
     
-    # Execute query
-    query = "PM Kisan Yojana eligibility rules 2026"
-    print(f"Running Tavily Search for query: '{query}'...")
+    # Execute extraction
+    test_urls = ["https://pmkisan.gov.in/"]
+    print(f"Running Tavily Extract for URLs: {test_urls}...")
     
-    results = tavily_search(query)
+    results = tavily_extract(test_urls)
     
-    print("\n--- Tavily Search Results ---")
-    print(results)
-    print("------------------------------")
+    print("\n--- Tavily Extract Results (First 500 chars) ---")
+    print(results[:500] + "...")
+    print("-------------------------------------------------")
     
+    # Validate result
     if "Error executing" in results or "Error:" in results:
-        print("FAILED: Tavily search returned an error.")
+        print("FAILED: Tavily extract returned an error.")
         sys.exit(1)
-    elif "No search results" in results:
-        print("FAILED: No search results returned.")
+    elif "No content extracted" in results:
+        print("FAILED: No content extracted.")
+        sys.exit(1)
+    elif len(results) < 50:
+        print("FAILED: Extracted content is too short.")
         sys.exit(1)
     else:
-        print("SUCCESS: Tavily search executed successfully via the MCP server!")
+        print("SUCCESS: Tavily extract executed successfully via the MCP server!")
+
+    # Test security filter: trying to extract a non-government URL
+    bad_urls = ["https://google.com/"]
+    print(f"\nTesting security boundary filter for URLs: {bad_urls}...")
+    security_test_result = tavily_extract(bad_urls)
+    print(f"Security test result: {security_test_result}")
+    if "Error: No official government URLs" in security_test_result:
+        print("SUCCESS: Security boundary filter correctly blocked non-government domain extraction!")
+    else:
+        print("FAILED: Security boundary filter allowed a non-government domain!")
+        sys.exit(1)
 
 if __name__ == "__main__":
     run_test()
