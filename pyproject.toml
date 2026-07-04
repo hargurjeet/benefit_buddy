@@ -15,6 +15,15 @@ dependencies = [
     "google-cloud-logging>=3.12.0,<4.0.0",
     "google-cloud-aiplatform[evaluation,agent-engines]>=1.156.0",
     "protobuf>=6.31.1,<7.0.0",
+    "duckduckgo_search==8.1.1",
+    "mcp>=1.2.0",
+    "opentelemetry-exporter-otlp",
+    "opentelemetry-exporter-gcp-logging",
+    "opentelemetry-exporter-gcp-trace",
+    "pydantic",
+    "numpy",
+    "python-dotenv",
+    "google-genai==2.10.0",
 ]
 requires-python = ">=3.11,<3.14"
 
@@ -93,8 +102,13 @@ build-backend = "hatchling.build"
 [tool.pytest.ini_options]
 pythonpath = "."
 asyncio_default_fixture_loop_scope = "function"
+addopts = "--ignore=tests/load_test"
+asyncio_mode = "auto"
 
 [tool.hatch.build.targets.wheel]
-packages = ["app","frontend"]
+packages = [
+    "app"
+]
+
 
 

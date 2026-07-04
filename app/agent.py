@@ -16,10 +16,12 @@ import os
 import sys
 
 
-# Add project root to sys.path to support imports both locally and inside container deployments
+# Add app folder and parent directory to sys.path to support imports both locally and inside container deployments
 project_root = os.path.dirname(os.path.abspath(__file__))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+parent_dir = os.path.dirname(project_root)
+for d in [project_root, parent_dir]:
+    if d not in sys.path:
+        sys.path.insert(0, d)
 
 from google.adk.agents import SequentialAgent, ParallelAgent
 from intake_agent import intake_agent
